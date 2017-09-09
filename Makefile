@@ -2,6 +2,8 @@ NAME = watchtest
 PKGNAME = org.example.$(NAME)-1.0.0
 SRC = tizen-manifest.xml inc/watchtest.h src/watchtest.c
 
+all: package-debug
+
 debug: Debug/$(NAME)
 
 release: Release/$(NAME)
@@ -16,10 +18,10 @@ install-debug: Debug/org.example.$(NAME)-1.0.0-arm.tpk
 install-release: Release/org.example.$(NAME)-1.0.0-arm.tpk
 	tizen install -n $(PKGNAME)-arm.tpk -- $(PWD)/Release
 
-Debug/org.example.$(NAME)-1.0.0-arm.tpk: Debug/$(NAME)
+Debug/$(PKGNAME).tpk: Debug/$(NAME)
 	tizen package -t tpk -s ids1024 -- $(PWD)/Debug
 
-Release/org.example.$(NAME)-1.0.0-arm.tpk: Release/$(NAME)
+Release/$(PKGNAME).tpk: Release/$(NAME)
 	tizen package -S on -t tpk -s ids1024 -- $(PWD)/Release
 
 Debug/$(NAME): $(SRC)
