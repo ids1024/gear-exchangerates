@@ -5,7 +5,7 @@
 #include <net_connection.h>
 #include <string>
 
-typedef struct appdata {
+struct AppData {
     Evas_Object *win;
     Evas_Object *conform;
     Evas_Object *genlist;
@@ -14,7 +14,7 @@ typedef struct appdata {
     Elm_Genlist_Item_Class genlist_line_class;
     Elm_Genlist_Item_Class genlist_title_class;
     Elm_Genlist_Item_Class genlist_padding_class;
-} appdata_s;
+};
 
 static size_t
 WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
@@ -33,7 +33,7 @@ win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
 static void
 win_back_cb(void *data, Evas_Object *obj, void *event_info)
 {
-    auto ad = (appdata_s*)data;
+    auto ad = (AppData*)data;
     /* Let window go to hide state. */
     elm_win_lower(ad->win);
 }
@@ -45,7 +45,7 @@ static char *plain_label_get(void *data, Evas_Object *obj, const char *part)
 }
 
 static void
-create_base_gui(appdata_s *ad)
+create_base_gui(AppData *ad)
 {
     ad->win = elm_win_util_standard_add(PACKAGE, PACKAGE);
     elm_win_autodel_set(ad->win, EINA_TRUE);
@@ -149,7 +149,7 @@ app_create(void *data)
         Initialize UI resources and application's data
         If this function returns true, the main loop of application starts
         If this function returns false, the application is terminated */
-    auto ad = (appdata_s*)data;
+    auto ad = (AppData*)data;
 
     create_base_gui(ad);
 
@@ -219,7 +219,7 @@ ui_app_low_memory(app_event_info_h event_info, void *user_data)
 int
 main(int argc, char *argv[])
 {
-    appdata_s ad = {0,};
+    AppData ad = {0,};
     int ret = 0;
 
     ui_app_lifecycle_callback_s event_callback = {0,};
