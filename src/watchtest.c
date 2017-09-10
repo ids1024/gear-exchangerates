@@ -1,4 +1,8 @@
 #include "watchtest.h"
+#include "apikey.h"
+#include <json-glib.h>
+#include <curl/curl.h>
+#include <net_connection.h>
 
 typedef struct appdata {
     Evas_Object *win;
@@ -10,6 +14,32 @@ typedef struct appdata {
     Elm_Genlist_Item_Class genlist_title_class;
     Elm_Genlist_Item_Class genlist_padding_class;
 } appdata_s;
+
+struct MemoryStruct {
+  char *memory;
+  size_t size;
+};
+ 
+// https://curl.haxx.se/libcurl/c/getinmemory.html
+static size_t
+WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+  size_t realsize = size * nmemb;
+  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+ 
+  mem->memory = realloc(mem->memory, mem->size + realsize + 1);
+  if(mem->memory == NULL) {
+    /* out of memory! */ 
+    printf("not enough memory (realloc returned NULL)\n");
+    return 0;
+  }
+ 
+  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  mem->size += realsize;
+  mem->memory[mem->size] = 0;
+ 
+  return realsize;
+}
 
 static void
 win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
@@ -78,13 +108,53 @@ create_base_gui(appdata_s *ad)
                 NULL,
                 NULL);
 
-    elm_genlist_item_append(ad->genlist,
-                &(ad->genlist_line_class),
-                (void*)"Close",
-                NULL,
-                ELM_GENLIST_ITEM_NONE,
-                NULL,
-                NULL);
+    CURL *curl = curl_easy_init();
+    connection_h connection;
+    int conn_err = connection_create(&connection);
+    if (conn_err == CONNECTION_ERROR_NONE)
+        return; // XXX
+
+    struct MemoryStruct chunk;
+
+    chunk.memory = malloc(1);
+    chunk.size = 0;
+   
+    curl_easy_setopt(curl, CURLOPT_URL, "https://openexchangerates.org/api/latest.json?app_id=" APIKEY);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    int curl_err = curl_easy_perform(curl);
+    if (curl_err != CURLE_OK)
+        return;
+
+    curl_easy_cleanup(curl);
+    connection_destroy(connection);
+
+    JsonParser *jsonParser = NULL;
+    GError *error = NULL;
+    jsonParser = json_parser_new();
+
+    // XXX errors
+    json_parser_load_from_data(jsonParser, chunk.memory, chunk.size, NULL);
+    JsonNode *root = json_parser_get_root(jsonParser);
+    JsonObject *obj = json_node_get_object(root);
+    JsonObject *rates = json_object_get_object_member(obj, "rates");
+    GList *list = json_object_get_members(rates);
+    for (GList *i = list; i != NULL; i = i->next) {
+        gdouble rate = json_object_get_double_member(rates, i->data);
+        gchar *str = g_strdup_printf("%s - %f", i->data, rate);
+        elm_genlist_item_append(ad->genlist,
+                    &(ad->genlist_line_class),
+                    str,
+                    NULL,
+                    ELM_GENLIST_ITEM_NONE,
+                    NULL,
+                    NULL);
+    }
+
+    g_list_free(list);
+
+    free(chunk.memory);
 
     elm_object_content_set(ad->conform, ad->genlist);
     evas_object_show(ad->genlist);
