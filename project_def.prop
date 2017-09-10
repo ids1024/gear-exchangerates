@@ -3,7 +3,7 @@ APPNAME = watchtest
 type = app
 profile = wearable-3.0
 
-USER_SRCS = src/watchtest.c
+USER_SRCS = src/watchtest.cpp
 USER_DEFS =
 USER_INC_DIRS = inc
 USER_OBJS =

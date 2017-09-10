@@ -3,6 +3,7 @@
 #include <json-glib.h>
 #include <curl/curl.h>
 #include <net_connection.h>
+#include <string>
 
 typedef struct appdata {
     Evas_Object *win;
@@ -15,30 +16,12 @@ typedef struct appdata {
     Elm_Genlist_Item_Class genlist_padding_class;
 } appdata_s;
 
-struct MemoryStruct {
-  char *memory;
-  size_t size;
-};
- 
-// https://curl.haxx.se/libcurl/c/getinmemory.html
 static size_t
 WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
-  size_t realsize = size * nmemb;
-  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
- 
-  mem->memory = realloc(mem->memory, mem->size + realsize + 1);
-  if(mem->memory == NULL) {
-    /* out of memory! */ 
-    printf("not enough memory (realloc returned NULL)\n");
-    return 0;
-  }
- 
-  memcpy(&(mem->memory[mem->size]), contents, realsize);
-  mem->size += realsize;
-  mem->memory[mem->size] = 0;
- 
-  return realsize;
+    std::string *str = (std::string*)userp;
+    str->append((char*)contents, size * nmemb);
+    return size * nmemb;
 }
 
 static void
@@ -50,7 +33,7 @@ win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
 static void
 win_back_cb(void *data, Evas_Object *obj, void *event_info)
 {
-    appdata_s *ad = data;
+    appdata_s *ad = (appdata_s*)data;
     /* Let window go to hide state. */
     elm_win_lower(ad->win);
 }
@@ -114,11 +97,8 @@ create_base_gui(appdata_s *ad)
     if (conn_err == CONNECTION_ERROR_NONE)
         return; // XXX
 
-    struct MemoryStruct chunk;
+    std::string chunk;
 
-    chunk.memory = malloc(1);
-    chunk.size = 0;
-   
     curl_easy_setopt(curl, CURLOPT_URL, "https://openexchangerates.org/api/latest.json?app_id=" APIKEY);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
@@ -135,13 +115,13 @@ create_base_gui(appdata_s *ad)
     jsonParser = json_parser_new();
 
     // XXX errors
-    json_parser_load_from_data(jsonParser, chunk.memory, chunk.size, NULL);
+    json_parser_load_from_data(jsonParser, chunk.c_str(), chunk.size(), NULL);
     JsonNode *root = json_parser_get_root(jsonParser);
     JsonObject *obj = json_node_get_object(root);
     JsonObject *rates = json_object_get_object_member(obj, "rates");
     GList *list = json_object_get_members(rates);
     for (GList *i = list; i != NULL; i = i->next) {
-        gdouble rate = json_object_get_double_member(rates, i->data);
+        gdouble rate = json_object_get_double_member(rates, (const gchar*)i->data);
         gchar *str = g_strdup_printf("%s - %f", i->data, rate);
         elm_genlist_item_append(ad->genlist,
                     &(ad->genlist_line_class),
@@ -153,8 +133,6 @@ create_base_gui(appdata_s *ad)
     }
 
     g_list_free(list);
-
-    free(chunk.memory);
 
     elm_object_content_set(ad->conform, ad->genlist);
     evas_object_show(ad->genlist);
@@ -171,7 +149,7 @@ app_create(void *data)
         Initialize UI resources and application's data
         If this function returns true, the main loop of application starts
         If this function returns false, the application is terminated */
-    appdata_s *ad = data;
+    appdata_s *ad = (appdata_s*)data;
 
     create_base_gui(ad);
 
