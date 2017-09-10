@@ -3,7 +3,12 @@
 typedef struct appdata {
 	Evas_Object *win;
 	Evas_Object *conform;
-	Evas_Object *label;
+	Evas_Object *genlist;
+	Evas_Object *circle_genlist;
+	Eext_Circle_Surface *surface;
+	Elm_Genlist_Item_Class genlist_line_class;
+	Elm_Genlist_Item_Class genlist_title_class;
+	Elm_Genlist_Item_Class genlist_padding_class;
 } appdata_s;
 
 static void
@@ -20,12 +25,15 @@ win_back_cb(void *data, Evas_Object *obj, void *event_info)
 	elm_win_lower(ad->win);
 }
 
+static char *plain_label_get(void *data, Evas_Object *obj, const char *part)
+{
+	char* label = (char*)data;
+	return strdup(label);
+}
+
 static void
 create_base_gui(appdata_s *ad)
 {
-	/* Window */
-	/* Create and initialize elm_win.
-	   elm_win is mandatory to manipulate window. */
 	ad->win = elm_win_util_standard_add(PACKAGE, PACKAGE);
 	elm_win_autodel_set(ad->win, EINA_TRUE);
 
@@ -37,10 +45,6 @@ create_base_gui(appdata_s *ad)
 	evas_object_smart_callback_add(ad->win, "delete,request", win_delete_request_cb, NULL);
 	eext_object_event_callback_add(ad->win, EEXT_CALLBACK_BACK, win_back_cb, ad);
 
-	/* Conformant */
-	/* Create and initialize elm_conformant.
-	   elm_conformant is mandatory for base gui to have proper size
-	   when indicator or virtual keypad is visible. */
 	ad->conform = elm_conformant_add(ad->win);
 	elm_win_indicator_mode_set(ad->win, ELM_WIN_INDICATOR_SHOW);
 	elm_win_indicator_opacity_set(ad->win, ELM_WIN_INDICATOR_OPAQUE);
@@ -48,16 +52,46 @@ create_base_gui(appdata_s *ad)
 	elm_win_resize_object_add(ad->win, ad->conform);
 	evas_object_show(ad->conform);
 
-	/* Label */
-	/* Create an actual view of the base gui.
-	   Modify this part to change the view. */
-	ad->label = elm_label_add(ad->conform);
-	elm_object_text_set(ad->label, "<align=center>Hello Tizen</align>");
-	evas_object_size_hint_weight_set(ad->label, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	elm_object_content_set(ad->conform, ad->label);
-
 	/* Show window after base gui is set up */
 	evas_object_show(ad->win);
+
+	ad->surface = eext_circle_surface_conformant_add(ad->conform);
+	ad->genlist = elm_genlist_add(ad->conform);
+
+	ad->genlist_line_class.item_style = "1text";
+	ad->genlist_line_class.func.text_get = plain_label_get;
+	ad->genlist_line_class.func.content_get = NULL;
+	ad->genlist_line_class.func.state_get = NULL;
+	ad->genlist_line_class.func.del = NULL;
+
+	ad->genlist_title_class.item_style = "title";
+	ad->genlist_title_class.func.text_get = plain_label_get;
+	ad->genlist_title_class.func.content_get = NULL;
+	ad->genlist_title_class.func.state_get = NULL;
+	ad->genlist_title_class.func.del = NULL;
+
+	elm_genlist_item_append(ad->genlist,
+				&(ad->genlist_title_class),
+				(void*)"My Service Launcher",
+				NULL,
+				ELM_GENLIST_ITEM_NONE,
+				NULL,
+				NULL);
+
+	elm_genlist_item_append(ad->genlist,
+				&(ad->genlist_line_class),
+				(void*)"Close",
+				NULL,
+				ELM_GENLIST_ITEM_NONE,
+				NULL,
+				NULL);
+
+	elm_object_content_set(ad->conform, ad->genlist);
+	evas_object_show(ad->genlist);
+
+	ad->circle_genlist = eext_circle_object_genlist_add(ad->genlist, ad->surface);
+	eext_circle_object_genlist_scroller_policy_set(ad->circle_genlist, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_AUTO);
+	eext_rotary_object_event_activated_set(ad->circle_genlist, EINA_TRUE);
 }
 
 static bool
