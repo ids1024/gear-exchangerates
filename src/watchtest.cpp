@@ -24,6 +24,30 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
     return size * nmemb;
 }
 
+static std::string
+fetch_url(char *url) {
+    CURL *curl = curl_easy_init();
+    connection_h connection;
+    int conn_err = connection_create(&connection);
+    if (conn_err == CONNECTION_ERROR_NONE)
+        return ""; // XXX
+
+    std::string chunk;
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    int curl_err = curl_easy_perform(curl);
+    if (curl_err != CURLE_OK)
+        return ""; // XXX
+
+    curl_easy_cleanup(curl);
+    connection_destroy(connection);
+
+    return chunk;
+}
+
 static void
 win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
 {
@@ -91,24 +115,7 @@ create_base_gui(AppData *ad)
                 NULL,
                 NULL);
 
-    CURL *curl = curl_easy_init();
-    connection_h connection;
-    int conn_err = connection_create(&connection);
-    if (conn_err == CONNECTION_ERROR_NONE)
-        return; // XXX
-
-    std::string chunk;
-
-    curl_easy_setopt(curl, CURLOPT_URL, "https://openexchangerates.org/api/latest.json?app_id=" APIKEY);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
-
-    int curl_err = curl_easy_perform(curl);
-    if (curl_err != CURLE_OK)
-        return;
-
-    curl_easy_cleanup(curl);
-    connection_destroy(connection);
+    auto chunk = fetch_url("https://openexchangerates.org/api/latest.json?app_id=" APIKEY);
 
     JsonParser *jsonParser = NULL;
     GError *error = NULL;
