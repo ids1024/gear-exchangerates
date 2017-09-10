@@ -1,5 +1,10 @@
 NAME = watchtest
-PKGNAME = org.example.$(NAME)-1.0.0
+PKGNAME = org.example.$(NAME)
+VERSION = 1.0.0
+ARCH = arm
+PACKAGE = $(PKGNAME)-$(VERSION)-$(ARCH).tpk
+ROOTSTRAP = wearable-2.3.2-device.core
+SECURITY_PROFILE = ids1024
 SRC = tizen-manifest.xml inc/watchtest.h src/watchtest.c
 
 all: package-debug
@@ -8,27 +13,27 @@ debug: Debug/$(NAME)
 
 release: Release/$(NAME)
 
-package-debug: Debug/$(PKGNAME).tpk
+package-debug: Debug/$(PACKAGE)
 
-package-release: Release/$(PKGNAME)-arm.tpk
+package-release: Release/$(PACKAGE)
 
-install-debug: Debug/org.example.$(NAME)-1.0.0-arm.tpk
-	tizen install -n $(PKGNAME)-arm.tpk -- $(PWD)/Debug
+install-debug: Debug/$(PACKAGE)
+	tizen install -n $(PACKAGE) -- $(PWD)/Debug
 
-install-release: Release/org.example.$(NAME)-1.0.0-arm.tpk
-	tizen install -n $(PKGNAME)-arm.tpk -- $(PWD)/Release
+install-release: Release/$(PACKAGE)
+	tizen install -n $(PACKAGE) -- $(PWD)/Release
 
-Debug/$(PKGNAME).tpk: Debug/$(NAME)
-	tizen package -t tpk -s ids1024 -- $(PWD)/Debug
+Debug/$(PACKAGE): Debug/$(NAME)
+	tizen package -t tpk -s $(SECURITY_PROFILE) -- $(PWD)/Debug
 
-Release/$(PKGNAME).tpk: Release/$(NAME)
-	tizen package -S on -t tpk -s ids1024 -- $(PWD)/Release
+Release/$(PACKAGE): Release/$(NAME)
+	tizen package -S on -t tpk -s $(SECURITY_PROFILE) -- $(PWD)/Release
 
 Debug/$(NAME): $(SRC)
-	tizen build-native -r wearable-3.0-device.core -C Debug
+	tizen build-native -r $(ROOTSTRAP) -C Debug
 
 Release/$(NAME): $(SRC)
-	tizen build-native -r wearable-3.0-device.core -C Release
+	tizen build-native -r $(ROOTSTRAP) -C Release
 
 clean:
 	tizen clean
