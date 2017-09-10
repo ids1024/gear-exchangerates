@@ -19,7 +19,7 @@ typedef struct appdata {
 static size_t
 WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
-    std::string *str = (std::string*)userp;
+    auto str = (std::string*)userp;
     str->append((char*)contents, size * nmemb);
     return size * nmemb;
 }
@@ -33,7 +33,7 @@ win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
 static void
 win_back_cb(void *data, Evas_Object *obj, void *event_info)
 {
-    appdata_s *ad = (appdata_s*)data;
+    auto ad = (appdata_s*)data;
     /* Let window go to hide state. */
     elm_win_lower(ad->win);
 }
@@ -116,11 +116,11 @@ create_base_gui(appdata_s *ad)
 
     // XXX errors
     json_parser_load_from_data(jsonParser, chunk.c_str(), chunk.size(), NULL);
-    JsonNode *root = json_parser_get_root(jsonParser);
-    JsonObject *obj = json_node_get_object(root);
-    JsonObject *rates = json_object_get_object_member(obj, "rates");
-    GList *list = json_object_get_members(rates);
-    for (GList *i = list; i != NULL; i = i->next) {
+    auto root = json_parser_get_root(jsonParser);
+    auto obj = json_node_get_object(root);
+    auto rates = json_object_get_object_member(obj, "rates");
+    auto list = json_object_get_members(rates);
+    for (auto i = list; i != NULL; i = i->next) {
         gdouble rate = json_object_get_double_member(rates, (const gchar*)i->data);
         gchar *str = g_strdup_printf("%s - %f", i->data, rate);
         elm_genlist_item_append(ad->genlist,
@@ -149,7 +149,7 @@ app_create(void *data)
         Initialize UI resources and application's data
         If this function returns true, the main loop of application starts
         If this function returns false, the application is terminated */
-    appdata_s *ad = (appdata_s*)data;
+    auto ad = (appdata_s*)data;
 
     create_base_gui(ad);
 
