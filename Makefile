@@ -18,16 +18,16 @@ package-debug: Debug/$(PACKAGE)
 package-release: Release/$(PACKAGE)
 
 install-debug: Debug/$(PACKAGE)
-	tizen install -n $(PACKAGE) -- $(PWD)/Debug
+	tizen install -n $(PACKAGE) -- ./Debug
 
 install-release: Release/$(PACKAGE)
-	tizen install -n $(PACKAGE) -- $(PWD)/Release
+	tizen install -n $(PACKAGE) -- ./Release
 
 Debug/$(PACKAGE): Debug/$(NAME)
-	tizen package -t tpk -s $(SECURITY_PROFILE) -- $(PWD)/Debug
+	tizen package -t tpk -s $(SECURITY_PROFILE) -- ./Debug
 
 Release/$(PACKAGE): Release/$(NAME)
-	tizen package -S on -t tpk -s $(SECURITY_PROFILE) -- $(PWD)/Release
+	tizen package -S on -t tpk -s $(SECURITY_PROFILE) -- ./Release
 
 Debug/$(NAME): $(SRC)
 	tizen build-native -r $(ROOTSTRAP) -C Debug
