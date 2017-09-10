@@ -1,5 +1,7 @@
 include config.mk
 
+PACKAGE = $(PKGNAME)-$(VERSION)-$(ARCH).tpk
+
 all: package-debug
 
 debug: Debug/$(NAME)
