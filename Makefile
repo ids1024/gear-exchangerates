@@ -4,6 +4,9 @@ PACKAGE = $(PKGNAME)-$(VERSION)-$(ARCH).tpk
 
 all: package-debug
 
+run:
+	tizen run -p $(PKGNAME)
+
 debug: Debug/$(NAME)
 
 release: Release/$(NAME)
@@ -33,4 +36,4 @@ Release/$(NAME): $(SRC)
 clean:
 	tizen clean
 
-.PHONY: debug release pakage-debug package-release install-debug install-release clean
+.PHONY: run debug release pakage-debug package-release install-debug install-release clean
