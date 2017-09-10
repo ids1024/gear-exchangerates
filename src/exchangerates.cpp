@@ -1,4 +1,4 @@
-#include "watchtest.h"
+#include "exchangerates.h"
 #include "apikey.h"
 #include <curl/curl.h>
 #include <json-glib.h>
