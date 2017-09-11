@@ -104,7 +104,7 @@ static void create_base_gui(AppData *ad) {
     ad->genlist_title_class.func.del = NULL;
 
     elm_genlist_item_append(ad->genlist, &(ad->genlist_title_class),
-                            (void *)"My Service Launcher", NULL,
+                            (void *)"Exchange Rates", NULL,
                             ELM_GENLIST_ITEM_NONE, NULL, NULL);
 
     auto chunk = fetch_url(
