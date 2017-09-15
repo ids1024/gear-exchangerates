@@ -107,8 +107,11 @@ static void create_base_gui(AppData *ad) {
                             (void *)"Exchange Rates", NULL,
                             ELM_GENLIST_ITEM_NONE, NULL, NULL);
 
-    auto chunk = fetch_url(
-        "https://openexchangerates.org/api/latest.json?app_id=" APIKEY);
+    auto url = g_strdup_printf(
+        "https://openexchangerates.org/api/latest.json?app_id=" APIKEY
+        "&base=%s&symbols=GBP,EUR,BTC",
+        "USD");
+    auto chunk = fetch_url(url);
 
     GError *error = NULL;
     auto jsonParser = json_parser_new();
@@ -122,7 +125,7 @@ static void create_base_gui(AppData *ad) {
     for (auto i = list; i != NULL; i = i->next) {
         gdouble rate =
             json_object_get_double_member(rates, (const gchar *)i->data);
-        gchar *str = g_strdup_printf("%s - %f", i->data, rate);
+        gchar *str = g_strdup_printf("%f %s", rate, i->data);
         elm_genlist_item_append(ad->genlist, &(ad->genlist_line_class), str,
                                 NULL, ELM_GENLIST_ITEM_NONE, NULL, NULL);
     }
