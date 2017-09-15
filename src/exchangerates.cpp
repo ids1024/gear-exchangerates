@@ -110,9 +110,8 @@ static void create_base_gui(AppData *ad) {
     auto chunk = fetch_url(
         "https://openexchangerates.org/api/latest.json?app_id=" APIKEY);
 
-    JsonParser *jsonParser = NULL;
     GError *error = NULL;
-    jsonParser = json_parser_new();
+    auto jsonParser = json_parser_new();
 
     // XXX errors
     json_parser_load_from_data(jsonParser, chunk.c_str(), chunk.size(), NULL);
